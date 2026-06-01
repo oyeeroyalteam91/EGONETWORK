@@ -6,6 +6,7 @@ from telegram.ext import Application, CallbackQueryHandler, CommandHandler, Mess
 
 from config import settings
 from handlers.admin_tools import allow_user, owner_panel, restrict_user, soft_mute, soft_unmute
+from handlers.broadcast import broadcast
 from handlers.chat import chat_reply
 from handlers.commands import commands
 from handlers.group_settings import group_panel, save_group, set_start_pic, set_welcome_pic, verify_off, verify_on
@@ -15,6 +16,7 @@ from handlers.moderation import moderation_guard
 from handlers.profile import my_profile, profile_data_info, profile_message_handler, setup_profile
 from handlers.start import privacy_policy, start
 from handlers.verification import enforce_verification, verify_callback
+from handlers.warnings import clear_warnings, show_warnings
 
 logging.basicConfig(level=logging.INFO)
 
@@ -39,6 +41,9 @@ def build_app() -> Application:
     application.add_handler(CommandHandler("allow", allow_user))
     application.add_handler(CommandHandler("mute", soft_mute))
     application.add_handler(CommandHandler("unmute", soft_unmute))
+    application.add_handler(CommandHandler("warns", show_warnings))
+    application.add_handler(CommandHandler("clearwarns", clear_warnings))
+    application.add_handler(CommandHandler("broadcast", broadcast))
     application.add_handler(CommandHandler("group", group_panel))
     application.add_handler(CommandHandler("verifyon", verify_on))
     application.add_handler(CommandHandler("verifyoff", verify_off))
