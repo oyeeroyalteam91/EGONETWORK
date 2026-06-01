@@ -72,3 +72,11 @@ async def football(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def bowling(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await play_game(update, context, "bowling")
+
+
+async def slot(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    message = update.effective_message
+    if not message:
+        return
+    await message.reply_dice(emoji="🎰")
+    await message.reply_text(s("Fun animation only. No coins, no bets, no cashout."))
