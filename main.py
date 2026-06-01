@@ -11,13 +11,13 @@ from handlers.broadcast import broadcast
 from handlers.chat import chat_reply
 from handlers.commands import commands
 from handlers.economy import balance, daily
-from handlers.games import basketball, bowling, dart, dice, football
+from handlers.games import basketball, bowling, dart, dice, football, slot
 from handlers.group_settings import group_panel, save_group, set_start_pic, set_welcome_pic, verify_off, verify_on
 from handlers.leaderboard import add_manual_points, leaderboard, reward_activity
 from handlers.media import get_custom_pic, list_custom_pics, set_custom_pic
 from handlers.moderation import moderation_guard
 from handlers.profile import my_profile, profile_data_info, profile_message_handler, setup_profile
-from handlers.quiz import anime_quiz, auto_quiz_job, disable_auto_quiz, enable_auto_quiz, gk_quiz, quiz_answer_callback
+from handlers.quiz import anime_pic_keys, anime_quiz, auto_quiz_job, disable_auto_quiz, enable_auto_quiz, gk_quiz, quiz_answer_callback, set_anime_quiz_pic
 from handlers.shop import buy_callback, my_items, set_shop_media, shop
 from handlers.start import privacy_policy, start
 from handlers.verification import enforce_verification, verify_callback
@@ -44,6 +44,8 @@ def build_app() -> Application:
     application.add_handler(CommandHandler("pics", list_custom_pics))
     application.add_handler(CommandHandler("animequiz", anime_quiz))
     application.add_handler(CommandHandler("gkquiz", gk_quiz))
+    application.add_handler(CommandHandler("animepickeys", anime_pic_keys))
+    application.add_handler(CommandHandler("setanimepic", set_anime_quiz_pic))
     application.add_handler(CommandHandler("autoquizon", enable_auto_quiz))
     application.add_handler(CommandHandler("autoquizoff", disable_auto_quiz))
     application.add_handler(CommandHandler("dice", dice))
@@ -51,6 +53,7 @@ def build_app() -> Application:
     application.add_handler(CommandHandler("basketball", basketball))
     application.add_handler(CommandHandler("football", football))
     application.add_handler(CommandHandler("bowling", bowling))
+    application.add_handler(CommandHandler("slot", slot))
     application.add_handler(CommandHandler("shop", shop))
     application.add_handler(CommandHandler("inventory", my_items))
     application.add_handler(CommandHandler("items", my_items))
