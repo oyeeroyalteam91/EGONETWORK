@@ -4,7 +4,7 @@ AZAI is the official EGO NETWORK community automation system.
 
 **Network:** EGO NETWORK  
 **Established:** 2026  
-**Main Purpose:** Telegram group protection, verification, stylish community replies, moderation, and owner-controlled automation.
+**Main Purpose:** Telegram group protection, verification, stylish community replies, moderation, leaderboard, custom pics, and owner-controlled automation.
 
 ## Core Direction
 
@@ -17,6 +17,8 @@ AZAI must work as:
 - A moderation and warning system
 - A stylish Hinglish conversational assistant for allowed interactions
 - An owner-controlled management system
+- A leaderboard and activity point system
+- A custom picture storage system
 - A future-ready Mini App / web dashboard project
 
 ## Critical Rules
@@ -28,8 +30,43 @@ AZAI must work as:
 - AZAI should refer to Aliza only as `Bhabhi Ji` or `Ma’am` in user-facing replies.
 - AZAI must not claim to be a real human. It may use natural human-like Hinglish tone.
 
-## Repository Status
+## Added Commands
 
-Initial blueprint base is being prepared.
+### User Commands
+
+- `/start` — main welcome/menu
+- `/setup` — profile onboarding
+- `/profile` — show saved profile
+- `/leaderboard` — show group leaderboard
+- `/top` — alias for leaderboard
+- `/setpic [name]` — save custom photo by sending or replying to a photo
+- `/getpic [name]` — retrieve saved custom photo
+- `/pics` — list saved custom photo names
+
+### Admin / Owner Pending
+
+- Owner panel
+- Global restriction command
+- Advanced warning reset system
+- Group settings panel
+- Broadcast system
+- Full Mini App dashboard
+
+## Current Status
+
+Completed base modules:
+
+- Environment template
+- Python dependency file
+- Configuration loader
+- MongoDB helper layer
+- Stylish font utility
+- Strict verification guard
+- Basic moderation guard
+- Profile onboarding
+- Custom pic storage
+- Leaderboard points
+- Basic chat reply logic
+- Main bot entrypoint
 
 Real tokens and private keys must be added only through environment variables, never committed to GitHub.
