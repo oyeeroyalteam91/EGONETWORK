@@ -12,7 +12,6 @@ GAME_REWARDS = {
     "basketball": 35,
     "football": 35,
     "bowling": 35,
-    "slot": 50,
 }
 
 GAME_EMOJIS = {
@@ -21,7 +20,6 @@ GAME_EMOJIS = {
     "basketball": "🏀",
     "football": "⚽",
     "bowling": "🎳",
-    "slot": "🎰",
 }
 
 
@@ -36,8 +34,6 @@ def is_win(game: str, value: int) -> bool:
         return value >= 4
     if game == "bowling":
         return value >= 5
-    if game == "slot":
-        return value == 64
     return False
 
 
@@ -53,7 +49,7 @@ async def play_game(update: Update, context: ContextTypes.DEFAULT_TYPE, game: st
     if is_win(game, dice.value):
         reward = GAME_REWARDS[game]
         total = add_coins(user.id, reward, f"{game}_win")
-        await message.reply_text(s(f"You won {reward} coins. Balance: {total}"))
+        await message.reply_text(s(f"You earned {reward} coins. Balance: {total}"))
     else:
         await message.reply_text(s("Not a win this time. Try again with style."))
 
@@ -76,7 +72,3 @@ async def football(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def bowling(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await play_game(update, context, "bowling")
-
-
-async def slot(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await play_game(update, context, "slot")
