@@ -3,6 +3,7 @@ from __future__ import annotations
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
+from config import settings
 from database import db, now_utc
 from handlers.economy import get_balance, spend_coins
 from utils.stylish_text import s
@@ -11,31 +12,14 @@ shop_items = db["shop_items"]
 inventory = db["inventory"]
 
 DEFAULT_SHOP_ITEMS = [
-    {
-        "key": "royal_badge",
-        "name": "Royal Badge",
-        "price": 500,
-        "description": "A premium profile flex badge for loyal members.",
-        "media_type": "photo",
-        "media_file_id": "",
-    },
-    {
-        "key": "anime_aura",
-        "name": "Anime Aura",
-        "price": 750,
-        "description": "A stylish anime-themed collectible aura.",
-        "media_type": "animation",
-        "media_file_id": "",
-    },
-    {
-        "key": "ego_crown",
-        "name": "EGO Crown",
-        "price": 1000,
-        "description": "A rare crown item for top community players.",
-        "media_type": "photo",
-        "media_file_id": "",
-    },
+    {"key": "royal_badge", "name": "Royal Badge", "price": 500, "description": "A premium profile flex badge for loyal members.", "media_type": "photo", "media_file_id": ""},
+    {"key": "anime_aura", "name": "Anime Aura", "price": 750, "description": "A stylish anime-themed collectible aura.", "media_type": "animation", "media_file_id": ""},
+    {"key": "ego_crown", "name": "EGO Crown", "price": 1000, "description": "A rare crown item for top community players.", "media_type": "photo", "media_file_id": ""},
 ]
+
+
+def is_owner(user_id: int | None) -> bool:
+    return user_id == settings.owner_id
 
 
 def ensure_default_shop() -> None:
@@ -56,7 +40,7 @@ async def shop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not message or not user:
         return
     ensure_default_shop()
-    items = list(shop_items.find({}).limit(20))
+    items = list(shop_items.find({}).sort("price", 1).limit(20))
     lines = [s("EGO Shop"), ""]
     for item in items:
         lines.append(f"{item['name']} — {item['price']} coins")
@@ -69,7 +53,7 @@ async def shop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def buy_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     user = update.effective_user
-    if not query or not user or not query.data:
+    if not query or not user or not query.data or not query.message:
         return
     await query.answer()
     key = query.data.split(":", 1)[1]
@@ -110,9 +94,51 @@ async def my_items(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await message.reply_text(f"{s('Your Inventory')}\n" + "\n".join(names))
 
 
+async def add_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    message = update.effective_message
+    user = update.effective_user
+    if not message or not user:
+        return
+    if not is_owner(user.id):
+        await message.reply_text(s("Owner access required."))
+        return
+    if len(context.args) < 3:
+        await message.reply_text("Usage: /addshopitem key price name")
+        return
+    key = context.args[0].lower().strip()
+    price = int(context.args[1])
+    name = " ".join(context.args[2:]).strip()
+    shop_items.update_one(
+        {"key": key},
+        {"$set": {"name": name, "price": price, "description": "Premium EGO item.", "updated_at": now_utc()}, "$setOnInsert": {"created_at": now_utc(), "media_file_id": "", "media_type": "photo"}},
+        upsert=True,
+    )
+    await message.reply_text(s(f"Shop item saved: {name}"))
+
+
+async def remove_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    message = update.effective_message
+    user = update.effective_user
+    if not message or not user:
+        return
+    if not is_owner(user.id):
+        await message.reply_text(s("Owner access required."))
+        return
+    if not context.args:
+        await message.reply_text("Usage: /delshopitem key")
+        return
+    key = context.args[0].lower().strip()
+    shop_items.delete_one({"key": key})
+    await message.reply_text(s(f"Shop item removed: {key}"))
+
+
 async def set_shop_media(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     message = update.effective_message
-    if not message:
+    user = update.effective_user
+    if not message or not user:
+        return
+    if not is_owner(user.id):
+        await message.reply_text(s("Owner access required."))
         return
     if len(context.args) < 1:
         await message.reply_text("Usage: /setshopmedia item_key")
