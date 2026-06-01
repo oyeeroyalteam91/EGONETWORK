@@ -3,8 +3,11 @@ from __future__ import annotations
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
-from database import is_gbanned, is_verified, mark_verified, upsert_user
+from database import db, is_gbanned, is_verified, mark_verified, upsert_user
 from utils.stylish_text import s
+
+group_settings = db["group_settings"]
+admin_records = db["admin_records"]
 
 
 def verification_keyboard(chat_id: int) -> InlineKeyboardMarkup:
@@ -12,6 +15,15 @@ def verification_keyboard(chat_id: int) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(s("Verify Access"), callback_data=f"verify:{chat_id}")],
         [InlineKeyboardButton(s("Why This Data"), callback_data="verification_info")],
     ])
+
+
+def verification_enabled(chat_id: int) -> bool:
+    data = group_settings.find_one({"chat_id": chat_id}) or {}
+    return bool(data.get("verification_enabled", True))
+
+
+def globally_restricted(user_id: int) -> bool:
+    return admin_records.find_one({"type": "global_restriction", "user_id": user_id}) is not None
 
 
 async def enforce_verification(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -24,7 +36,9 @@ async def enforce_verification(update: Update, context: ContextTypes.DEFAULT_TYP
         return
     if user.is_bot:
         return
-    if is_gbanned(user.id):
+    if not verification_enabled(chat.id):
+        return
+    if is_gbanned(user.id) or globally_restricted(user.id):
         await message.delete()
         return
     if is_verified(user.id, chat.id):
