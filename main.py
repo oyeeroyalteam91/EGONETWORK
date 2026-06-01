@@ -22,6 +22,7 @@ from handlers.shop import buy_callback, my_items, set_shop_media, shop
 from handlers.start import privacy_policy, start
 from handlers.verification import enforce_verification, verify_callback
 from handlers.warnings import clear_warnings, show_warnings
+from handlers.welcome import welcome_new_members
 
 logging.basicConfig(level=logging.INFO)
 
@@ -81,6 +82,7 @@ def build_app() -> Application:
     application.add_handler(CallbackQueryHandler(quiz_answer_callback, pattern="^quiz:"))
     application.add_handler(CallbackQueryHandler(buy_callback, pattern="^buy:"))
 
+    application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_members), group=-2)
     application.add_handler(MessageHandler(filters.ALL, save_group), group=-1)
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, profile_message_handler), group=0)
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, moderation_guard), group=1)
