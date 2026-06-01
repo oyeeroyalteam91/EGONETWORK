@@ -27,6 +27,10 @@ async def chat_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         return
 
     text = message.text.lower()
+    if "bhabhi" in text:
+        await message.reply_text(s("Bhabhi Ji ke liye respect mode always on hai."))
+        return
+
     if "kaha se" in text or "where are" in text or "from" in text:
         await message.reply_text(s("Mera system base reference Patna, Bihar se linked hai."))
         return
