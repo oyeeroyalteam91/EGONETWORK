@@ -5,6 +5,7 @@ from telegram.ext import ContextTypes
 
 from config import settings
 from database import db, now_utc
+from handlers.panel_photo import send_panel_photo_or_text
 from utils.stylish_text import s
 
 admin_records = db["admin_records"]
@@ -24,33 +25,35 @@ async def owner_panel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         return
 
     text = (
-        f"{s('Owner Panel')}\n\n"
+        f"{s('Owner Panel')}\n"
+        f"{settings.network_name} | {settings.est_year}\n\n"
         "Core:\n"
         "/owner - show panel\n"
         "/group - group settings\n"
-        "/broadcast message - send update to saved groups\n\n"
-        "Verification:\n"
+        "/events - event control\n"
+        "/broadcast message - send update\n\n"
+        "Verification & Events:\n"
         "/verifyon - enable verification\n"
         "/verifyoff - disable verification\n"
-        "/autoquiz - toggle 30 minute quiz\n\n"
+        "/autoquiz - toggle 30 minute quiz\n"
+        "/addevent key DD-MM coins name\n\n"
         "Media:\n"
+        "/setpanelphoto - set panel photo\n"
         "/setwelcome - set welcome photo\n"
-        "/setstartmedia - set start photo/video/GIF\n"
-        "/startmedia - show saved start media type\n"
+        "/setstartmedia - set start media\n"
         "/setanimepic key - set anime quiz photo\n"
-        "/setshopmedia key - set shop item photo/GIF\n\n"
-        "Economy & Shop:\n"
-        "/additem key price name - add shop item\n"
-        "/addpoints user_id amount - add leaderboard points\n\n"
-        "Safety:\n"
-        "/restrict user_id reason - restrict globally\n"
-        "/allow user_id - allow again\n"
-        "/mute user_id - pause member chat\n"
-        "/unmute user_id - restore member chat\n"
-        "/warns user_id - show warnings\n"
-        "/clearwarns user_id - clear warnings\n"
+        "/setshopmedia key - set shop media\n\n"
+        "Economy & Safety:\n"
+        "/additem key price name\n"
+        "/addpoints user_id amount\n"
+        "/restrict user_id reason\n"
+        "/allow user_id\n"
+        "/mute user_id\n"
+        "/unmute user_id\n"
+        "/warns user_id\n"
+        "/clearwarns user_id"
     )
-    await message.reply_text(text)
+    await send_panel_photo_or_text(message, text)
 
 
 async def restrict_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -103,11 +106,7 @@ async def soft_mute(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await message.reply_text("Usage: /mute user_id")
         return
     target_id = int(context.args[0])
-    await context.bot.restrict_chat_member(
-        chat_id=chat.id,
-        user_id=target_id,
-        permissions=ChatPermissions(can_send_messages=False),
-    )
+    await context.bot.restrict_chat_member(chat_id=chat.id, user_id=target_id, permissions=ChatPermissions(can_send_messages=False))
     await message.reply_text(s("Member send access paused."))
 
 
@@ -124,9 +123,5 @@ async def soft_unmute(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         await message.reply_text("Usage: /unmute user_id")
         return
     target_id = int(context.args[0])
-    await context.bot.restrict_chat_member(
-        chat_id=chat.id,
-        user_id=target_id,
-        permissions=ChatPermissions(can_send_messages=True, can_send_audios=True, can_send_documents=True, can_send_photos=True, can_send_videos=True, can_send_video_notes=True, can_send_voice_notes=True, can_send_polls=True, can_send_other_messages=True, can_add_web_page_previews=True),
-    )
+    await context.bot.restrict_chat_member(chat_id=chat.id, user_id=target_id, permissions=ChatPermissions(can_send_messages=True, can_send_audios=True, can_send_documents=True, can_send_photos=True, can_send_videos=True, can_send_video_notes=True, can_send_voice_notes=True, can_send_polls=True, can_send_other_messages=True, can_add_web_page_previews=True))
     await message.reply_text(s("Member send access restored."))
