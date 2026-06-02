@@ -9,6 +9,7 @@ from handlers.broadcast import broadcast
 from handlers.chat import chat_reply
 from handlers.commands import commands
 from handlers.economy import balance, daily
+from handlers.events import add_event, event_status, events_panel
 from handlers.games import basketball, bowling, dart, dice, football, slot
 from handlers.group_settings import group_panel, save_group, set_start_pic, set_welcome_pic, verify_off, verify_on
 from handlers.leaderboard import add_manual_points, leaderboard, reward_activity, set_leader_pic
@@ -33,6 +34,7 @@ USER_COMMANDS = {
     "animequiz": anime_quiz, "gkquiz": gk_quiz, "animepickeys": anime_pic_keys,
     "dice": dice, "dart": dart, "basketball": basketball, "football": football,
     "bowling": bowling, "slot": slot, "shop": shop, "inventory": my_items, "items": my_items,
+    "events": events_panel, "eventstatus": event_status,
 }
 
 OWNER_COMMANDS = {
@@ -43,22 +45,19 @@ OWNER_COMMANDS = {
     "setstartpic": set_start_pic, "setstartmedia": set_start_media, "startmedia": show_start_media,
     "setshopmedia": set_shop_media, "additem": add_shop_item, "addpoints": add_manual_points,
     "setanimepic": set_anime_quiz_pic, "autoquiz": autoquiz_toggle,
-    "autoquizon": enable_auto_quiz, "autoquizoff": disable_auto_quiz,
+    "autoquizon": enable_auto_quiz, "autoquizoff": disable_auto_quiz, "addevent": add_event,
 }
 
 
 def build_app() -> Application:
     app = Application.builder().token(settings.bot_token).build()
-
     for command, handler in {**USER_COMMANDS, **OWNER_COMMANDS}.items():
         app.add_handler(CommandHandler(command, handler))
-
     app.add_handler(CallbackQueryHandler(privacy_policy, pattern="privacy_policy"))
     app.add_handler(CallbackQueryHandler(profile_data_info, pattern="profile_data_info"))
     app.add_handler(CallbackQueryHandler(verify_callback, pattern="verify|verification_info"))
     app.add_handler(CallbackQueryHandler(quiz_answer_callback, pattern="^quiz:"))
     app.add_handler(CallbackQueryHandler(buy_callback, pattern="^buy:"))
-
     app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_members), group=-2)
     app.add_handler(MessageHandler(filters.ALL, save_group), group=-1)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, profile_message_handler), group=0)
@@ -66,7 +65,6 @@ def build_app() -> Application:
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, enforce_verification), group=2)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, reward_activity), group=3)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat_reply), group=4)
-
     if app.job_queue:
         app.job_queue.run_repeating(auto_quiz_job, interval=1800, first=60)
     return app
