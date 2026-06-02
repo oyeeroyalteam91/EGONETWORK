@@ -3,17 +3,17 @@ from __future__ import annotations
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
+from config import settings
 from database import upsert_user, get_user
-from utils.stylish_text import s
 
 PROFILE_STEPS = ["name", "gender", "birthday", "religion", "festival"]
 
 PROMPTS = {
-    "name": "Profile setup started. Send your display name.",
-    "gender": "Now send your gender.",
-    "birthday": "Now send your birthdate. Example: 21-07 or 21-07-2007.",
-    "religion": "Now send your religion.",
-    "festival": "Now send your favorite festival. Example: Diwali, Eid, Holi, Christmas, Chhath.",
+    "name": "EGO NETWORK | Profile Setup\nPlease send your display name.",
+    "gender": "Please send your gender.",
+    "birthday": "Please send your birthdate. Example: 21-07 or 21-07-2007.",
+    "religion": "Please send your religion.",
+    "festival": "Please send your favorite festival. Example: Diwali, Eid, Holi, Christmas, Chhath.",
 }
 
 
@@ -45,7 +45,7 @@ async def setup_profile(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     if not message or not user:
         return
     context.user_data["profile_step"] = "name"
-    await message.reply_text(s(PROMPTS["name"]), reply_markup=profile_info_keyboard())
+    await message.reply_text(PROMPTS["name"], reply_markup=profile_info_keyboard())
 
 
 async def auto_setup_if_needed(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -58,7 +58,7 @@ async def auto_setup_if_needed(update: Update, context: ContextTypes.DEFAULT_TYP
     step = missing_step(profile)
     if step:
         context.user_data["profile_step"] = step
-        await message.reply_text(s(PROMPTS[step]), reply_markup=profile_info_keyboard())
+        await message.reply_text(PROMPTS[step], reply_markup=profile_info_keyboard())
 
 
 async def profile_data_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -67,8 +67,9 @@ async def profile_data_info(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         return
     await query.answer()
     await query.message.reply_text(
-        "We ask basic profile details to personalize wishes, birthday rewards, festival rewards, verification, and community records. "
-        "Do not share passwords, OTPs, payment details, or private documents."
+        "EGO NETWORK | Data Use\n\n"
+        "We collect only basic profile details for verification, birthday wishes, festival rewards, and community features.\n"
+        "Never share passwords, OTPs, payment details, private documents, bot tokens, or database links."
     )
 
 
@@ -96,11 +97,13 @@ async def profile_message_handler(update: Update, context: ContextTypes.DEFAULT_
     upcoming = next_step(step)
     if upcoming:
         context.user_data["profile_step"] = upcoming
-        await message.reply_text(s(PROMPTS[upcoming]), reply_markup=profile_info_keyboard())
+        await message.reply_text(PROMPTS[upcoming], reply_markup=profile_info_keyboard())
         return
 
     context.user_data.pop("profile_step", None)
-    await message.reply_text(s("Profile setup completed. Your saved details can now be used for wishes, rewards, and community features."))
+    await message.reply_text(
+        f"Profile setup completed.\n{settings.network_name} | EST. {settings.est_year}\nYour saved details can now be used for wishes, rewards, and community features."
+    )
 
 
 async def my_profile(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -112,7 +115,7 @@ async def my_profile(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     data = get_user(user.id) or {}
     profile = data.get("profile", {}) or {}
     text = (
-        f"{s('Your Profile')}\n\n"
+        f"Your Profile\n{settings.network_name} | EST. {settings.est_year}\n\n"
         f"Name: {profile.get('name', user.full_name)}\n"
         f"Gender: {profile.get('gender', 'Not set')}\n"
         f"Birthday: {profile.get('birthday', 'Not set')}\n"
