@@ -17,6 +17,7 @@ from handlers.group_settings import group_panel, save_group, set_start_pic, set_
 from handlers.leaderboard import add_manual_points, leaderboard, reward_activity, set_leader_pic
 from handlers.media import get_custom_pic, list_custom_pics, set_custom_pic
 from handlers.moderation import moderation_guard
+from handlers.panel_photo import set_panel_photo
 from handlers.profile import my_profile, profile_data_info, profile_message_handler, setup_profile
 from handlers.quiz import anime_pic_keys, anime_quiz, auto_quiz_job, disable_auto_quiz, enable_auto_quiz, gk_quiz, quiz_answer_callback, set_anime_quiz_pic
 from handlers.quiz_toggle import autoquiz_toggle
@@ -46,7 +47,7 @@ OWNER_COMMANDS = {
     "clearwarns": clear_warnings, "broadcast": broadcast, "group": group_panel,
     "verifyon": verify_on, "verifyoff": verify_off, "setwelcome": set_welcome_pic,
     "setstartpic": set_start_pic, "setstartmedia": set_start_media, "startmedia": show_start_media,
-    "setshopmedia": set_shop_media, "additem": add_shop_item, "addpoints": add_manual_points,
+    "setpanelphoto": set_panel_photo, "setshopmedia": set_shop_media, "additem": add_shop_item, "addpoints": add_manual_points,
     "setanimepic": set_anime_quiz_pic, "autoquiz": autoquiz_toggle,
     "autoquizon": enable_auto_quiz, "autoquizoff": disable_auto_quiz, "addevent": add_event,
 }
