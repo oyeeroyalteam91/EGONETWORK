@@ -22,7 +22,7 @@ from handlers.profile import my_profile, profile_data_info, profile_message_hand
 from handlers.quiz import anime_pic_keys, anime_quiz, auto_quiz_job, disable_auto_quiz, enable_auto_quiz, gk_quiz, quiz_answer_callback, set_anime_quiz_pic
 from handlers.quiz_toggle import autoquiz_toggle
 from handlers.shop import add_shop_item, buy_callback, my_items, set_shop_media, shop
-from handlers.start import privacy_policy, start
+from handlers.start import azai_panel, privacy_policy, start
 from handlers.stickers import add_sticker_reply, list_sticker_replies, remove_sticker_reply
 from handlers.verification import enforce_verification, verify_callback, verify_command
 from handlers.warnings import clear_warnings, show_warnings
@@ -60,6 +60,7 @@ def build_app() -> Application:
     for command, handler in {**USER_COMMANDS, **OWNER_COMMANDS}.items():
         app.add_handler(CommandHandler(command, handler))
     app.add_handler(CallbackQueryHandler(privacy_policy, pattern="privacy_policy"))
+    app.add_handler(CallbackQueryHandler(azai_panel, pattern="^azai_"))
     app.add_handler(CallbackQueryHandler(profile_data_info, pattern="profile_data_info"))
     app.add_handler(CallbackQueryHandler(verify_callback, pattern="verify|verification_info"))
     app.add_handler(CallbackQueryHandler(quiz_answer_callback, pattern="^quiz:"))
