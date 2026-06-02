@@ -5,6 +5,7 @@ from telegram.ext import ContextTypes
 
 from config import settings
 from database import db, now_utc
+from handlers.panel_photo import send_panel_photo_or_text
 from utils.stylish_text import s
 
 group_settings = db["group_settings"]
@@ -36,13 +37,14 @@ async def group_panel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         return
     data = group_settings.find_one({"chat_id": chat.id}) or {}
     text = (
-        f"{s('Group Settings')}\n\n"
+        f"{s('Group Settings')}\n"
+        f"{settings.network_name} | {settings.est_year}\n\n"
         f"Verification: {data.get('verification_enabled', True)}\n"
         f"Welcome Pic: {'Set' if data.get('welcome_pic') else 'Not set'}\n"
         f"Start Pic: {'Set' if data.get('start_pic') else 'Not set'}\n\n"
-        "/verifyon\n/verifyoff\n/setwelcome\n/setstartpic"
+        "/verifyon\n/verifyoff\n/setwelcome\n/setstartpic\n/setpanelphoto"
     )
-    await message.reply_text(text)
+    await send_panel_photo_or_text(message, text)
 
 
 async def verify_on(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
