@@ -4,6 +4,7 @@ import random
 from dataclasses import dataclass
 from typing import Literal
 
+import httpx
 from bson import ObjectId
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
@@ -57,56 +58,71 @@ def pick_question(quiz_type: QuizType) -> QuizQuestion:
 
 
 def quiz_keyboard(quiz_id: str, options: list[str]) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton(option, callback_data=f"quiz:{quiz_id}:{index}")]
-        for index, option in enumerate(options)
-    ])
+    return InlineKeyboardMarkup([[InlineKeyboardButton(option, callback_data=f"quiz:{quiz_id}:{index}")] for index, option in enumerate(options)])
 
 
 def get_anime_pic_file_id(question_key: str) -> str | None:
     row = anime_quiz_pics.find_one({"key": question_key}) or {}
-    return row.get("file_id")
+    return row.get("file_id") or row.get("image_url")
+
+
+async def fetch_anime_image(question: QuizQuestion) -> str | None:
+    saved = get_anime_pic_file_id(question.key)
+    if saved:
+        return saved
+    character_name = question.options[question.answer_index]
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.get("https://api.jikan.moe/v4/characters", params={"q": character_name, "limit": 1})
+            data = response.json()
+            image_url = data.get("data", [{}])[0].get("images", {}).get("jpg", {}).get("image_url")
+            if image_url:
+                anime_quiz_pics.update_one({"key": question.key}, {"$set": {"image_url": image_url, "updated_at": now_utc(), "auto": True}}, upsert=True)
+                return image_url
+    except Exception:
+        return None
+    return None
+
+
+async def pick_anime_question_with_image() -> tuple[QuizQuestion | None, str | None]:
+    questions = ANIME_QUESTIONS[:]
+    random.shuffle(questions)
+    for question in questions:
+        image = await fetch_anime_image(question)
+        if image:
+            return question, image
+    return None, None
 
 
 async def send_quiz(context: ContextTypes.DEFAULT_TYPE, chat_id: int, quiz_type: QuizType) -> None:
-    question = pick_question(quiz_type)
-    anime_pic_file_id = get_anime_pic_file_id(question.key) if quiz_type == "anime" else None
-    inserted = active_quizzes.insert_one({
-        "chat_id": chat_id,
-        "type": quiz_type,
-        "question": question.question,
-        "options": question.options,
-        "answer_index": question.answer_index,
-        "question_key": question.key,
-        "created_at": now_utc(),
-        "open": True,
-    })
+    image_url = None
+    if quiz_type == "anime":
+        question, image_url = await pick_anime_question_with_image()
+        if not question:
+            quiz_type = "gk"
+            question = pick_question("gk")
+    else:
+        question = pick_question("gk")
+    inserted = active_quizzes.insert_one({"chat_id": chat_id, "type": quiz_type, "question": question.question, "options": question.options, "answer_index": question.answer_index, "question_key": question.key, "created_at": now_utc(), "open": True})
     quiz_id = str(inserted.inserted_id)
     title = "Anime Pic Quiz" if quiz_type == "anime" else "GK Quiz"
-    text = (
-        f"{s(title)}\n\n"
-        f"{s(question.question)}\n\n"
-        f"{s('Choose carefully. Only one chance is allowed.')}\n"
-        f"{s(f'Reward: {QUIZ_REWARD} coins')}"
-    )
-    if quiz_type == "anime" and anime_pic_file_id:
-        await context.bot.send_photo(chat_id=chat_id, photo=anime_pic_file_id, caption=text, reply_markup=quiz_keyboard(quiz_id, question.options))
+    text = f"{s(title)}\n\n{s(question.question)}\n\n{s('Choose carefully. Only one chance is allowed.')}\n{s(f'Reward: {QUIZ_REWARD} coins')}"
+    if quiz_type == "anime" and image_url:
+        await context.bot.send_photo(chat_id=chat_id, photo=image_url, caption=text, reply_markup=quiz_keyboard(quiz_id, question.options))
     else:
         await context.bot.send_message(chat_id=chat_id, text=text, reply_markup=quiz_keyboard(quiz_id, question.options))
 
 
 async def anime_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat = update.effective_chat
-    if not chat:
-        return
-    await send_quiz(context, chat.id, "anime")
+    if chat:
+        await send_quiz(context, chat.id, "anime")
 
 
 async def gk_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat = update.effective_chat
-    if not chat:
-        return
-    await send_quiz(context, chat.id, "gk")
+    if chat:
+        await send_quiz(context, chat.id, "gk")
 
 
 async def quiz_answer_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -128,7 +144,6 @@ async def quiz_answer_callback(update: Update, context: ContextTypes.DEFAULT_TYP
     if existing:
         await query.message.reply_text(s("You already used your one chance."))
         return
-
     correct = selected == int(quiz["answer_index"])
     quiz_answers.insert_one({"quiz_id": quiz_id, "user_id": user.id, "selected": selected, "correct": correct, "created_at": now_utc()})
     if correct:
@@ -160,11 +175,7 @@ async def set_anime_quiz_pic(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if not source.photo:
         await message.reply_text(s("Reply to an anime character photo with /setanimepic key."))
         return
-    anime_quiz_pics.update_one(
-        {"key": key},
-        {"$set": {"file_id": source.photo[-1].file_id, "updated_at": now_utc()}},
-        upsert=True,
-    )
+    anime_quiz_pics.update_one({"key": key}, {"$set": {"file_id": source.photo[-1].file_id, "updated_at": now_utc(), "auto": False}}, upsert=True)
     await message.reply_text(s(f"Anime quiz picture saved for {key}."))
 
 
@@ -174,27 +185,25 @@ async def anime_pic_keys(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         return
     lines = [s("Anime Pic Quiz Keys")]
     for question in ANIME_QUESTIONS:
-        saved = "set" if get_anime_pic_file_id(question.key) else "not set"
-        lines.append(f"{question.key}: {question.options[question.answer_index]} — {saved}")
+        saved = "set" if get_anime_pic_file_id(question.key) else "auto-ready"
+        lines.append(f"{question.key}: {question.options[question.answer_index]} - {saved}")
     await message.reply_text("\n".join(lines))
 
 
 async def enable_auto_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat = update.effective_chat
     message = update.effective_message
-    if not chat or not message:
-        return
-    auto_quiz_chats.update_one({"chat_id": chat.id}, {"$set": {"enabled": True, "updated_at": now_utc()}}, upsert=True)
-    await message.reply_text(s("Auto quiz enabled. Anime Pic Quiz and GK Quiz will run every 30 minutes."))
+    if chat and message:
+        auto_quiz_chats.update_one({"chat_id": chat.id}, {"$set": {"enabled": True, "updated_at": now_utc()}}, upsert=True)
+        await message.reply_text(s("Auto quiz enabled. Anime Pic Quiz and GK Quiz will run every 30 minutes."))
 
 
 async def disable_auto_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     chat = update.effective_chat
     message = update.effective_message
-    if not chat or not message:
-        return
-    auto_quiz_chats.update_one({"chat_id": chat.id}, {"$set": {"enabled": False, "updated_at": now_utc()}}, upsert=True)
-    await message.reply_text(s("Auto quiz disabled."))
+    if chat and message:
+        auto_quiz_chats.update_one({"chat_id": chat.id}, {"$set": {"enabled": False, "updated_at": now_utc()}}, upsert=True)
+        await message.reply_text(s("Auto quiz disabled."))
 
 
 async def auto_quiz_job(context: ContextTypes.DEFAULT_TYPE) -> None:
