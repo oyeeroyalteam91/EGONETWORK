@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -15,6 +16,7 @@ groups = db["group_settings"]
 events = db["events"]
 event_claims = db["event_claims"]
 
+INDIA_TZ = ZoneInfo("Asia/Kolkata")
 BIRTHDAY_COINS = 500
 DEFAULT_EVENT_COINS = 250
 
@@ -23,12 +25,16 @@ def is_owner(user_id: int | None) -> bool:
     return user_id == settings.owner_id
 
 
+def india_now() -> datetime:
+    return datetime.now(INDIA_TZ)
+
+
 def today_ddmm() -> str:
-    return datetime.now(timezone.utc).strftime("%d-%m")
+    return india_now().strftime("%d-%m")
 
 
 def today_id() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return india_now().strftime("%Y-%m-%d")
 
 
 def clean_date(value: str) -> str | None:
@@ -63,7 +69,7 @@ def was_done(key: str, user_id: int, day: str) -> bool:
 
 
 def mark_done(key: str, user_id: int, day: str) -> None:
-    event_claims.update_one({"key": key, "user_id": user_id, "day": day}, {"$set": {"at": now_utc()}}, upsert=True)
+    event_claims.update_one({"key": key, "user_id": user_id, "day": day}, {"$set": {"at": now_utc(), "timezone": "Asia/Kolkata"}}, upsert=True)
 
 
 async def send_all_groups(context: ContextTypes.DEFAULT_TYPE, text: str) -> None:
@@ -83,9 +89,10 @@ async def events_panel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         return
     rows = list(events.find({"enabled": True}).sort("date", 1).limit(20))
     lines = [s("EGO Event Control"), ""]
+    lines.append("Calendar: India IST")
     lines.append("Birthday wishes: ON")
     lines.append(f"Birthday reward: {BIRTHDAY_COINS} coins")
-    lines.append("Daily auto check: ON")
+    lines.append("Daily check: 12:05 AM IST")
     lines.append("")
     lines.append("Commands:")
     lines.append("/events")
@@ -106,7 +113,16 @@ async def event_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         return
     bday_count = users.count_documents({"profile.birthday": {"$exists": True}})
     event_count = events.count_documents({"enabled": True})
-    text = f"{s('Event Status')}\n\nBirthdays saved: {bday_count}\nCustom events: {event_count}\nBirthday coins: {BIRTHDAY_COINS}\n"
+    text = (
+        f"{s('Event Status')}\n\n"
+        f"Calendar: Asia/Kolkata\n"
+        f"Today: {today_id()}\n"
+        f"Date key: {today_ddmm()}\n"
+        f"Daily check: 12:05 AM IST\n"
+        f"Birthdays saved: {bday_count}\n"
+        f"Custom events: {event_count}\n"
+        f"Birthday coins: {BIRTHDAY_COINS}\n"
+    )
     await message.reply_text(text)
 
 
@@ -128,7 +144,7 @@ async def add_event(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
     coins = int(context.args[2])
     name = " ".join(context.args[3:]).strip()
-    events.update_one({"key": key}, {"$set": {"date": date, "coins": coins, "name": name, "enabled": True, "updated_at": now_utc()}}, upsert=True)
+    events.update_one({"key": key}, {"$set": {"date": date, "coins": coins, "name": name, "enabled": True, "timezone": "Asia/Kolkata", "updated_at": now_utc()}}, upsert=True)
     await message.reply_text(s(f"Event saved: {name}"))
 
 
