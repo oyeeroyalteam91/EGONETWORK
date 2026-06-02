@@ -23,6 +23,7 @@ from handlers.quiz import anime_pic_keys, anime_quiz, auto_quiz_job, disable_aut
 from handlers.quiz_toggle import autoquiz_toggle
 from handlers.shop import add_shop_item, buy_callback, my_items, set_shop_media, shop
 from handlers.start import privacy_policy, start
+from handlers.stickers import add_sticker_reply, list_sticker_replies, remove_sticker_reply
 from handlers.verification import enforce_verification, verify_callback, verify_command
 from handlers.warnings import clear_warnings, show_warnings
 from handlers.welcome import welcome_new_members
@@ -38,7 +39,7 @@ USER_COMMANDS = {
     "animequiz": anime_quiz, "gkquiz": gk_quiz, "animepickeys": anime_pic_keys,
     "dice": dice, "dart": dart, "basketball": basketball, "football": football,
     "bowling": bowling, "slot": slot, "shop": shop, "inventory": my_items, "items": my_items,
-    "events": events_panel, "eventstatus": event_status,
+    "events": events_panel, "eventstatus": event_status, "stickers": list_sticker_replies,
 }
 
 OWNER_COMMANDS = {
@@ -50,6 +51,7 @@ OWNER_COMMANDS = {
     "setpanelphoto": set_panel_photo, "setshopmedia": set_shop_media, "additem": add_shop_item, "addpoints": add_manual_points,
     "setanimepic": set_anime_quiz_pic, "autoquiz": autoquiz_toggle,
     "autoquizon": enable_auto_quiz, "autoquizoff": disable_auto_quiz, "addevent": add_event,
+    "addsticker": add_sticker_reply, "removesticker": remove_sticker_reply,
 }
 
 
