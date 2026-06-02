@@ -18,7 +18,7 @@ from handlers.media import get_custom_pic, list_custom_pics, set_custom_pic
 from handlers.moderation import moderation_guard
 from handlers.profile import my_profile, profile_data_info, profile_message_handler, setup_profile
 from handlers.quiz import anime_pic_keys, anime_quiz, auto_quiz_job, disable_auto_quiz, enable_auto_quiz, gk_quiz, quiz_answer_callback, set_anime_quiz_pic
-from handlers.shop import buy_callback, my_items, set_shop_media, shop
+from handlers.shop import add_shop_item, buy_callback, my_items, set_shop_media, shop
 from handlers.start import privacy_policy, start
 from handlers.verification import enforce_verification, verify_callback, verify_command
 from handlers.warnings import clear_warnings, show_warnings
@@ -77,6 +77,7 @@ def build_app() -> Application:
     application.add_handler(CommandHandler("setstartmedia", set_start_media))
     application.add_handler(CommandHandler("startmedia", show_start_media))
     application.add_handler(CommandHandler("setshopmedia", set_shop_media))
+    application.add_handler(CommandHandler("additem", add_shop_item))
 
     application.add_handler(CallbackQueryHandler(privacy_policy, pattern="privacy_policy"))
     application.add_handler(CallbackQueryHandler(profile_data_info, pattern="profile_data_info"))
