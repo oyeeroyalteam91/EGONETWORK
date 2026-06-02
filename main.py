@@ -20,7 +20,7 @@ from handlers.profile import my_profile, profile_data_info, profile_message_hand
 from handlers.quiz import anime_pic_keys, anime_quiz, auto_quiz_job, disable_auto_quiz, enable_auto_quiz, gk_quiz, quiz_answer_callback, set_anime_quiz_pic
 from handlers.shop import buy_callback, my_items, set_shop_media, shop
 from handlers.start import privacy_policy, start
-from handlers.verification import enforce_verification, verify_callback
+from handlers.verification import enforce_verification, verify_callback, verify_command
 from handlers.warnings import clear_warnings, show_warnings
 from handlers.welcome import welcome_new_members
 
@@ -31,6 +31,7 @@ def build_app() -> Application:
     application = Application.builder().token(settings.bot_token).build()
 
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("verify", verify_command))
     application.add_handler(CommandHandler("help", commands))
     application.add_handler(CommandHandler("commands", commands))
     application.add_handler(CommandHandler("setup", setup_profile))
