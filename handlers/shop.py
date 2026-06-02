@@ -43,8 +43,10 @@ async def shop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     items = list(shop_items.find({}).sort("price", 1).limit(20))
     lines = [s("EGO Shop"), ""]
     for item in items:
+        media_status = "Media: Set" if item.get("media_file_id") else "Media: Not set"
         lines.append(f"{item['name']} — {item['price']} coins")
         lines.append(item.get("description", "Premium item"))
+        lines.append(media_status)
         lines.append("")
     lines.append(f"Balance: {get_balance(user.id)} coins")
     await message.reply_text("\n".join(lines), reply_markup=shop_keyboard(items))
@@ -67,7 +69,7 @@ async def buy_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await query.message.reply_text(s(f"Not enough coins. Balance: {balance}"))
         return
     inventory.insert_one({"user_id": user.id, "item_key": key, "price": item["price"], "created_at": now_utc()})
-    caption = s(f"Purchase complete: {item['name']}\nBalance: {balance} coins")
+    caption = s(f"Purchase complete: {item['name']}\nBalance: {balance} coins\nSaved to your vault.")
     media_file_id = item.get("media_file_id")
     media_type = item.get("media_type", "photo")
     if media_file_id and media_type == "animation":
@@ -78,20 +80,33 @@ async def buy_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await query.message.reply_text(caption)
 
 
+async def send_item_media(message, item: dict, caption: str) -> None:
+    media_file_id = item.get("media_file_id")
+    media_type = item.get("media_type", "photo")
+    if media_file_id and media_type == "animation":
+        await message.reply_animation(animation=media_file_id, caption=caption)
+    elif media_file_id:
+        await message.reply_photo(photo=media_file_id, caption=caption)
+    else:
+        await message.reply_text(caption)
+
+
 async def my_items(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     message = update.effective_message
     user = update.effective_user
     if not message or not user:
         return
-    rows = list(inventory.find({"user_id": user.id}).limit(50))
+    rows = list(inventory.find({"user_id": user.id}).sort("created_at", -1).limit(20))
     if not rows:
-        await message.reply_text(s("Your inventory is empty."))
+        await message.reply_text(s("Your vault is empty."))
         return
-    names = []
+    await message.reply_text(s(f"Your EGO Vault: {len(rows)} item(s)"))
     for row in rows:
         item = shop_items.find_one({"key": row.get("item_key")}) or {}
-        names.append(f"- {item.get('name', row.get('item_key', 'Unknown Item'))}")
-    await message.reply_text(f"{s('Your Inventory')}\n" + "\n".join(names))
+        name = item.get("name", row.get("item_key", "Unknown Item"))
+        price = row.get("price", item.get("price", 0))
+        caption = s(f"Vault Item: {name}\nPurchased for: {price} coins")
+        await send_item_media(message, item, caption)
 
 
 async def add_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -103,7 +118,7 @@ async def add_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         await message.reply_text(s("Owner access required."))
         return
     if len(context.args) < 3:
-        await message.reply_text("Usage: /addshopitem key price name")
+        await message.reply_text("Usage: /additem key price name")
         return
     key = context.args[0].lower().strip()
     price = int(context.args[1])
@@ -125,7 +140,7 @@ async def remove_shop_item(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         await message.reply_text(s("Owner access required."))
         return
     if not context.args:
-        await message.reply_text("Usage: /delshopitem key")
+        await message.reply_text("Usage: /removeitem key")
         return
     key = context.args[0].lower().strip()
     shop_items.delete_one({"key": key})
@@ -143,7 +158,7 @@ async def set_shop_media(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if len(context.args) < 1:
         await message.reply_text("Usage: /setshopmedia item_key")
         return
-    key = context.args[0]
+    key = context.args[0].lower().strip()
     source = message.reply_to_message
     if not source:
         await message.reply_text(s("Reply to a photo or GIF with /setshopmedia item_key."))
