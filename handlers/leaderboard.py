@@ -9,6 +9,7 @@ from utils.stylish_text import s
 
 points = db["points"]
 users = db["users"]
+leader_pics = db["leader_pics"]
 
 
 def is_owner(user_id: int | None) -> bool:
@@ -22,6 +23,11 @@ def display_name(user_id: int) -> str:
     if user.get("name"):
         return str(user["name"])
     return str(user_id)
+
+
+def get_leader_pic(user_id: int) -> str | None:
+    row = leader_pics.find_one({"user_id": user_id}) or {}
+    return row.get("file_id")
 
 
 def add_points(user_id: int, chat_id: int, amount: int) -> int:
@@ -63,7 +69,33 @@ async def leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         prefix = medals[index - 1] if index <= 3 else f"{index}."
         name = display_name(int(row["user_id"]))
         lines.append(f"{prefix} {name} — {row.get('points', 0)} pts")
-    await message.reply_text("\n".join(lines))
+    caption = "\n".join(lines)
+
+    top_user_id = int(rows[0]["user_id"])
+    top_pic = get_leader_pic(top_user_id)
+    if top_pic:
+        await message.reply_photo(photo=top_pic, caption=caption)
+    else:
+        await message.reply_text(caption)
+
+
+async def set_leader_pic(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    message = update.effective_message
+    user = update.effective_user
+    if not message or not user:
+        return
+
+    source = message.reply_to_message if message.reply_to_message and message.reply_to_message.photo else message
+    if not source.photo:
+        await message.reply_text(s("Send a photo with /setleaderpic or reply to a photo with /setleaderpic."))
+        return
+
+    leader_pics.update_one(
+        {"user_id": user.id},
+        {"$set": {"file_id": source.photo[-1].file_id, "updated_at": now_utc()}, "$setOnInsert": {"created_at": now_utc()}},
+        upsert=True,
+    )
+    await message.reply_text(s("Leaderboard picture saved."))
 
 
 async def add_manual_points(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
