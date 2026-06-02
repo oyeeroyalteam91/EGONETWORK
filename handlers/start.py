@@ -24,7 +24,8 @@ def start_caption() -> str:
         f"{s('Welcome To')} {settings.bot_name}\n"
         f"{s(settings.network_name)} | {settings.est_year}\n\n"
         f"{s('Royal community control is ready.')}\n"
-        f"{s('Verify, protect, manage, play, earn, and keep the group clean without noise.')}"
+        f"{s('Verify, protect, manage, play, earn, and keep the group clean without noise.')}\n\n"
+        "Please complete your profile setup: /setup"
     )
 
 
