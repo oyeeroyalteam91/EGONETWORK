@@ -24,18 +24,14 @@ async def chat_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     user = update.effective_user
     if not message or not user or not message.text:
         return
-
     if context.user_data.get("profile_step"):
         return
-
     text = message.text.strip()
     if message.chat.type in {"group", "supergroup"} and not should_reply(text):
         return
-
     if message.chat.type == "private" and not should_reply(text) and not has_special(text):
         return
-
     if await maybe_reply_with_sticker(update, context):
         return
-
-    await message.reply_text(azai_reply(user.id, text))
+    reply = await azai_reply(user.id, text)
+    await message.reply_text(reply)
