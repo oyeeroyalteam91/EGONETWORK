@@ -10,8 +10,7 @@ from utils.stylish_text import s
 
 def should_reply(text: str) -> bool:
     lowered = text.lower()
-    triggers = ["azai", "@", "hello", "hlo", "hi"]
-    return any(trigger in lowered for trigger in triggers)
+    return any(word in lowered for word in ["azai", "@", "hello", "hlo", "hi", "hey"])
 
 
 async def chat_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -26,17 +25,26 @@ async def chat_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     if await maybe_reply_with_sticker(update, context):
         return
 
-    if user.id == settings.aliza_id:
-        await message.reply_text(s("Ji Bhabhi Ji, boliye."))
+    text = message.text.lower()
+
+    if user.id == settings.owner_id:
+        await message.reply_text(s("Mr. Ego, Sir, AZAI active hai. Batao kya handle karna hai?"))
         return
 
-    text = message.text.lower()
-    if "bhabhi" in text:
-        await message.reply_text(s("Bhabhi Ji ke liye respect mode always on hai."))
+    if user.id == settings.aliza_id:
+        await message.reply_text(s("Ji Bhabhi Ji, AZAI yahin hai. Aap bolo, full respect mode on hai."))
+        return
+
+    if "bhabhi" in text or "aliza" in text:
+        await message.reply_text(s("Bhabhi Ji ke liye respect always top level par hai."))
+        return
+
+    if "tension" in text or "problem" in text or "sad" in text:
+        await message.reply_text(s("Relax bhai. Scene tough ho sakta hai, tu weak nahi. Ek-ek step me solve karte hain."))
         return
 
     if "kaha se" in text or "where are" in text or "from" in text:
-        await message.reply_text(s("Mera system base reference Patna, Bihar se linked hai."))
+        await message.reply_text(s("System base Patna, Bihar se linked hai. Vibe EGO NETWORK wali hai."))
         return
 
-    await message.reply_text(s("Haan, boliye. AZAI active hai."))
+    await message.reply_text(s("Haan bhai, AZAI active hai. Chill mode on, kaam bolo."))
