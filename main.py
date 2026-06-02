@@ -13,7 +13,7 @@ from handlers.commands import commands
 from handlers.economy import balance, daily
 from handlers.games import basketball, bowling, dart, dice, football, slot
 from handlers.group_settings import group_panel, save_group, set_start_pic, set_welcome_pic, verify_off, verify_on
-from handlers.leaderboard import add_manual_points, leaderboard, reward_activity
+from handlers.leaderboard import add_manual_points, leaderboard, reward_activity, set_leader_pic
 from handlers.media import get_custom_pic, list_custom_pics, set_custom_pic
 from handlers.moderation import moderation_guard
 from handlers.profile import my_profile, profile_data_info, profile_message_handler, setup_profile
@@ -39,6 +39,7 @@ def build_app() -> Application:
     application.add_handler(CommandHandler("daily", daily))
     application.add_handler(CommandHandler("leaderboard", leaderboard))
     application.add_handler(CommandHandler("top", leaderboard))
+    application.add_handler(CommandHandler("setleaderpic", set_leader_pic))
     application.add_handler(CommandHandler("addpoints", add_manual_points))
     application.add_handler(CommandHandler("setpic", set_custom_pic))
     application.add_handler(CommandHandler("getpic", get_custom_pic))
