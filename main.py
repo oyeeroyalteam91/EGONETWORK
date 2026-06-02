@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import logging
-
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, MessageHandler, filters
-
 from config import settings
 from handlers.admin_tools import allow_user, owner_panel, restrict_user, soft_mute, soft_unmute
 from handlers.assets import set_start_media, show_start_media
@@ -18,6 +16,7 @@ from handlers.media import get_custom_pic, list_custom_pics, set_custom_pic
 from handlers.moderation import moderation_guard
 from handlers.profile import my_profile, profile_data_info, profile_message_handler, setup_profile
 from handlers.quiz import anime_pic_keys, anime_quiz, auto_quiz_job, disable_auto_quiz, enable_auto_quiz, gk_quiz, quiz_answer_callback, set_anime_quiz_pic
+from handlers.quiz_toggle import autoquiz_toggle
 from handlers.shop import add_shop_item, buy_callback, my_items, set_shop_media, shop
 from handlers.start import privacy_policy, start
 from handlers.verification import enforce_verification, verify_callback, verify_command
@@ -26,82 +25,55 @@ from handlers.welcome import welcome_new_members
 
 logging.basicConfig(level=logging.INFO)
 
+USER_COMMANDS = {
+    "start": start, "verify": verify_command, "help": commands, "commands": commands,
+    "setup": setup_profile, "profile": my_profile, "balance": balance, "daily": daily,
+    "leaderboard": leaderboard, "top": leaderboard, "setleaderpic": set_leader_pic,
+    "setpic": set_custom_pic, "getpic": get_custom_pic, "pics": list_custom_pics,
+    "animequiz": anime_quiz, "gkquiz": gk_quiz, "animepickeys": anime_pic_keys,
+    "dice": dice, "dart": dart, "basketball": basketball, "football": football,
+    "bowling": bowling, "slot": slot, "shop": shop, "inventory": my_items, "items": my_items,
+}
+
+OWNER_COMMANDS = {
+    "owner": owner_panel, "restrict": restrict_user, "allow": allow_user,
+    "mute": soft_mute, "unmute": soft_unmute, "warns": show_warnings,
+    "clearwarns": clear_warnings, "broadcast": broadcast, "group": group_panel,
+    "verifyon": verify_on, "verifyoff": verify_off, "setwelcome": set_welcome_pic,
+    "setstartpic": set_start_pic, "setstartmedia": set_start_media, "startmedia": show_start_media,
+    "setshopmedia": set_shop_media, "additem": add_shop_item, "addpoints": add_manual_points,
+    "setanimepic": set_anime_quiz_pic, "autoquiz": autoquiz_toggle,
+    "autoquizon": enable_auto_quiz, "autoquizoff": disable_auto_quiz,
+}
+
 
 def build_app() -> Application:
-    application = Application.builder().token(settings.bot_token).build()
+    app = Application.builder().token(settings.bot_token).build()
 
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("verify", verify_command))
-    application.add_handler(CommandHandler("help", commands))
-    application.add_handler(CommandHandler("commands", commands))
-    application.add_handler(CommandHandler("setup", setup_profile))
-    application.add_handler(CommandHandler("profile", my_profile))
-    application.add_handler(CommandHandler("balance", balance))
-    application.add_handler(CommandHandler("daily", daily))
-    application.add_handler(CommandHandler("leaderboard", leaderboard))
-    application.add_handler(CommandHandler("top", leaderboard))
-    application.add_handler(CommandHandler("setleaderpic", set_leader_pic))
-    application.add_handler(CommandHandler("addpoints", add_manual_points))
-    application.add_handler(CommandHandler("setpic", set_custom_pic))
-    application.add_handler(CommandHandler("getpic", get_custom_pic))
-    application.add_handler(CommandHandler("pics", list_custom_pics))
-    application.add_handler(CommandHandler("animequiz", anime_quiz))
-    application.add_handler(CommandHandler("gkquiz", gk_quiz))
-    application.add_handler(CommandHandler("animepickeys", anime_pic_keys))
-    application.add_handler(CommandHandler("setanimepic", set_anime_quiz_pic))
-    application.add_handler(CommandHandler("autoquizon", enable_auto_quiz))
-    application.add_handler(CommandHandler("autoquizoff", disable_auto_quiz))
-    application.add_handler(CommandHandler("dice", dice))
-    application.add_handler(CommandHandler("dart", dart))
-    application.add_handler(CommandHandler("basketball", basketball))
-    application.add_handler(CommandHandler("football", football))
-    application.add_handler(CommandHandler("bowling", bowling))
-    application.add_handler(CommandHandler("slot", slot))
-    application.add_handler(CommandHandler("shop", shop))
-    application.add_handler(CommandHandler("inventory", my_items))
-    application.add_handler(CommandHandler("items", my_items))
+    for command, handler in {**USER_COMMANDS, **OWNER_COMMANDS}.items():
+        app.add_handler(CommandHandler(command, handler))
 
-    application.add_handler(CommandHandler("owner", owner_panel))
-    application.add_handler(CommandHandler("restrict", restrict_user))
-    application.add_handler(CommandHandler("allow", allow_user))
-    application.add_handler(CommandHandler("mute", soft_mute))
-    application.add_handler(CommandHandler("unmute", soft_unmute))
-    application.add_handler(CommandHandler("warns", show_warnings))
-    application.add_handler(CommandHandler("clearwarns", clear_warnings))
-    application.add_handler(CommandHandler("broadcast", broadcast))
-    application.add_handler(CommandHandler("group", group_panel))
-    application.add_handler(CommandHandler("verifyon", verify_on))
-    application.add_handler(CommandHandler("verifyoff", verify_off))
-    application.add_handler(CommandHandler("setwelcome", set_welcome_pic))
-    application.add_handler(CommandHandler("setstartpic", set_start_pic))
-    application.add_handler(CommandHandler("setstartmedia", set_start_media))
-    application.add_handler(CommandHandler("startmedia", show_start_media))
-    application.add_handler(CommandHandler("setshopmedia", set_shop_media))
-    application.add_handler(CommandHandler("additem", add_shop_item))
+    app.add_handler(CallbackQueryHandler(privacy_policy, pattern="privacy_policy"))
+    app.add_handler(CallbackQueryHandler(profile_data_info, pattern="profile_data_info"))
+    app.add_handler(CallbackQueryHandler(verify_callback, pattern="verify|verification_info"))
+    app.add_handler(CallbackQueryHandler(quiz_answer_callback, pattern="^quiz:"))
+    app.add_handler(CallbackQueryHandler(buy_callback, pattern="^buy:"))
 
-    application.add_handler(CallbackQueryHandler(privacy_policy, pattern="privacy_policy"))
-    application.add_handler(CallbackQueryHandler(profile_data_info, pattern="profile_data_info"))
-    application.add_handler(CallbackQueryHandler(verify_callback, pattern="verify|verification_info"))
-    application.add_handler(CallbackQueryHandler(quiz_answer_callback, pattern="^quiz:"))
-    application.add_handler(CallbackQueryHandler(buy_callback, pattern="^buy:"))
+    app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_members), group=-2)
+    app.add_handler(MessageHandler(filters.ALL, save_group), group=-1)
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, profile_message_handler), group=0)
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, moderation_guard), group=1)
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, enforce_verification), group=2)
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, reward_activity), group=3)
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat_reply), group=4)
 
-    application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_members), group=-2)
-    application.add_handler(MessageHandler(filters.ALL, save_group), group=-1)
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, profile_message_handler), group=0)
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, moderation_guard), group=1)
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, enforce_verification), group=2)
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, reward_activity), group=3)
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, chat_reply), group=4)
-
-    if application.job_queue:
-        application.job_queue.run_repeating(auto_quiz_job, interval=1800, first=60)
-
-    return application
+    if app.job_queue:
+        app.job_queue.run_repeating(auto_quiz_job, interval=1800, first=60)
+    return app
 
 
 def main() -> None:
-    application = build_app()
-    application.run_polling()
+    build_app().run_polling()
 
 
 if __name__ == "__main__":
