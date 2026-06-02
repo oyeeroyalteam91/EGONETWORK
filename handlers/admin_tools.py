@@ -22,14 +22,33 @@ async def owner_panel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     if not is_owner(user.id):
         await message.reply_text(s("Owner access required."))
         return
+
     text = (
         f"{s('Owner Panel')}\n\n"
-        "/owner - show owner panel\n"
-        "/restrict user_id reason - add global restriction record\n"
-        "/allow user_id - remove global restriction record\n"
-        "/warns user_id - show warning count\n"
+        "Core:\n"
+        "/owner - show panel\n"
+        "/group - group settings\n"
+        "/broadcast message - send update to saved groups\n\n"
+        "Verification:\n"
+        "/verifyon - enable verification\n"
+        "/verifyoff - disable verification\n"
+        "/autoquiz - toggle 30 minute quiz\n\n"
+        "Media:\n"
+        "/setwelcome - set welcome photo\n"
+        "/setstartmedia - set start photo/video/GIF\n"
+        "/startmedia - show saved start media type\n"
+        "/setanimepic key - set anime quiz photo\n"
+        "/setshopmedia key - set shop item photo/GIF\n\n"
+        "Economy & Shop:\n"
+        "/additem key price name - add shop item\n"
+        "/addpoints user_id amount - add leaderboard points\n\n"
+        "Safety:\n"
+        "/restrict user_id reason - restrict globally\n"
+        "/allow user_id - allow again\n"
+        "/mute user_id - pause member chat\n"
+        "/unmute user_id - restore member chat\n"
+        "/warns user_id - show warnings\n"
         "/clearwarns user_id - clear warnings\n"
-        "/broadcast message - send owner message to saved groups\n"
     )
     await message.reply_text(text)
 
