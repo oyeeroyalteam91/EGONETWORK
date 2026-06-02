@@ -1,13 +1,19 @@
 from __future__ import annotations
 
+from datetime import timedelta
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
-from database import db, is_gbanned, is_verified, mark_verified, upsert_user
+from config import settings
+from database import db, is_gbanned, is_verified, mark_verified, now_utc, upsert_user
 from utils.stylish_text import s
 
 group_settings = db["group_settings"]
 admin_records = db["admin_records"]
+verification_prompts = db["verification_prompts"]
+
+PROMPT_COOLDOWN_SECONDS = 45
 
 
 def verification_keyboard(chat_id: int) -> InlineKeyboardMarkup:
@@ -26,6 +32,30 @@ def globally_restricted(user_id: int) -> bool:
     return admin_records.find_one({"type": "global_restriction", "user_id": user_id}) is not None
 
 
+async def is_group_admin(context: ContextTypes.DEFAULT_TYPE, chat_id: int, user_id: int) -> bool:
+    if user_id == settings.owner_id:
+        return True
+    try:
+        member = await context.bot.get_chat_member(chat_id=chat_id, user_id=user_id)
+        return member.status in {"administrator", "creator"}
+    except Exception:
+        return False
+
+
+def should_send_prompt(chat_id: int, user_id: int) -> bool:
+    row = verification_prompts.find_one({"chat_id": chat_id, "user_id": user_id}) or {}
+    last_at = row.get("last_at")
+    current = now_utc()
+    if last_at and current - last_at < timedelta(seconds=PROMPT_COOLDOWN_SECONDS):
+        return False
+    verification_prompts.update_one(
+        {"chat_id": chat_id, "user_id": user_id},
+        {"$set": {"last_at": current}},
+        upsert=True,
+    )
+    return True
+
+
 async def enforce_verification(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     message = update.effective_message
     user = update.effective_user
@@ -38,8 +68,13 @@ async def enforce_verification(update: Update, context: ContextTypes.DEFAULT_TYP
         return
     if not verification_enabled(chat.id):
         return
+    if await is_group_admin(context, chat.id, user.id):
+        return
     if is_gbanned(user.id) or globally_restricted(user.id):
-        await message.delete()
+        try:
+            await message.delete()
+        except Exception:
+            pass
         return
     if is_verified(user.id, chat.id):
         return
@@ -49,12 +84,33 @@ async def enforce_verification(update: Update, context: ContextTypes.DEFAULT_TYP
     except Exception:
         pass
 
+    if not should_send_prompt(chat.id, user.id):
+        return
+
     text = (
         f"{s('Access Locked')}\n\n"
         f"{s('Verification is required before chatting in this group.')}\n"
-        f"{s('This rule applies to every member, old or new.')}"
+        f"{s('This applies to every non-admin member.')}\n\n"
+        f"{s('If the button does not work, send /verify in this group.')}"
     )
-    await context.bot.send_message(chat_id=chat.id, text=text, reply_markup=verification_keyboard(chat.id))
+    try:
+        await context.bot.send_message(chat_id=chat.id, text=text, reply_markup=verification_keyboard(chat.id))
+    except Exception:
+        pass
+
+
+async def verify_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    message = update.effective_message
+    user = update.effective_user
+    chat = update.effective_chat
+    if not message or not user or not chat:
+        return
+    if chat.type not in {"group", "supergroup"}:
+        await message.reply_text(s("Use /verify inside the group where access is locked."))
+        return
+    upsert_user(user.id, {"name": user.full_name, "username": user.username, "verified": True})
+    mark_verified(user.id, chat.id)
+    await message.reply_text(s("Verification complete. You can chat now."))
 
 
 async def verify_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -64,23 +120,23 @@ async def verify_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         return
     await query.answer()
 
+    target_message = query.message
+
     if query.data == "verification_info":
         text = (
             "Why this data is collected:\n\n"
             "AZAI uses basic Telegram profile data only for verification, safety, anti-spam, warning count, and group protection. "
             "It does not need your password, private chats, OTP, or payment details."
         )
-        await query.message.reply_text(text)
+        if target_message:
+            await target_message.reply_text(text)
         return
 
     if not query.data.startswith("verify:"):
         return
 
     chat_id = int(query.data.split(":", 1)[1])
-    upsert_user(user.id, {
-        "name": user.full_name,
-        "username": user.username,
-        "verified": True,
-    })
+    upsert_user(user.id, {"name": user.full_name, "username": user.username, "verified": True})
     mark_verified(user.id, chat_id)
-    await query.message.reply_text(s("Verification complete. You can chat now."))
+    if target_message:
+        await target_message.reply_text(s("Verification complete. You can chat now."))
