@@ -1,103 +1,112 @@
-# AZAI
+╔══════════════════════════════╗
+            𝐀𝐙𝐀𝐈
+╚══════════════════════════════╝
 
-## EGO NETWORK · EST. 2026
+𓆩⚚ 𝐄ɢᴏ 𝐍ᴇᴛᴡᴏʀᴋ ⚚𓆪 • 𝐄ꜱᴛ. 𝟐𝟎𝟐𝟔
 
-AZAI is the official community automation system of EGO NETWORK.
+𝐀𝐙𝐀𝐈 ɪꜱ ᴛʜᴇ ᴏꜰꜰɪᴄɪᴀʟ ᴄᴏᴍᴍᴜɴɪᴛʏ
+ᴀᴜᴛᴏᴍᴀᴛɪᴏɴ ꜱʏꜱᴛᴇᴍ ᴏꜰ 𝐄ɢᴏ 𝐍ᴇᴛᴡᴏʀᴋ.
 
-It is designed for Telegram communities that need protection, economy, games, quizzes, shop systems, media controls, and clean group management in one premium experience.
+ɪᴛ ɪꜱ ᴅᴇꜱɪɢɴᴇᴅ ꜰᴏʀ ᴛᴇʟᴇɢʀᴀᴍ
+ᴄᴏᴍᴍᴜɴɪᴛɪᴇꜱ ᴛʜᴀᴛ ɴᴇᴇᴅ ᴘʀᴏᴛᴇᴄᴛɪᴏɴ,
+ᴇᴄᴏɴᴏᴍʏ, ɢᴀᴍᴇꜱ, Qᴜɪᴢᴢᴇꜱ,
+ꜱʜᴏᴘ ꜱʏꜱᴛᴇᴍꜱ, ᴍᴇᴅɪᴀ ᴄᴏɴᴛʀᴏʟꜱ
+ᴀɴᴅ ᴄʟᴇᴀɴ ɢʀᴏᴜᴘ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ
+ɪɴ ᴏɴᴇ ᴘʀᴇᴍɪᴜᴍ ᴇxᴘᴇʀɪᴇɴᴄᴇ.
 
-AZAI is built under the ownership of MR EGO.
+𝐀𝐙𝐀𝐈 ɪꜱ ʙᴜɪʟᴛ ᴜɴᴅᴇʀ
+ᴛʜᴇ ᴏᴡɴᴇʀꜱʜɪᴘ ᴏꜰ 𝐌ʀ 𝐄ɢᴏ.
 
----
+━━━━━━━━━━━━━━━━━━
 
-## Owner
+𝐎𝐖𝐍𝐄𝐑
 
-**MR EGO**  
-Founder and Owner of EGO NETWORK
+𝐌ʀ 𝐄ɢᴏ
+𝐅ᴏᴜɴᴅᴇʀ & 𝐎ᴡɴᴇʀ ᴏꜰ 𝐄ɢᴏ 𝐍ᴇᴛᴡᴏʀᴋ
 
-- Master: https://t.me/EGOISTICxPRIME
-- Updates: https://t.me/EGOxUPDATES
-- Support: https://t.me/EGOxSUPPORT
+• 𝐌ᴀꜱᴛᴇʀ
+  https://t.me/EGOISTICxPRIME
 
----
+• 𝐔ᴘᴅᴀᴛᴇꜱ
+  https://t.me/EGOxUPDATES
 
-## Core Features
+• 𝐒ᴜᴘᴘᴏʀᴛ
+  https://t.me/EGOxSUPPORT
 
-### Protection
+━━━━━━━━━━━━━━━━━━
 
-- Verification-based community access
-- Group safety controls
-- Warning and moderation support
-- Owner-managed community control
-- Anti-spam foundation
+𝐂𝐎𝐑𝐄 𝐅𝐄𝐀𝐓𝐔𝐑𝐄𝐒
 
-### Economy
+🛡 𝐏ʀᴏᴛᴇᴄᴛɪᴏɴ
+• Verification-Based Access
+• Group Safety Controls
+• Warning System
+• Community Moderation
+• Anti-Spam Foundation
 
-- Coin wallet system
-- Daily rewards
-- Activity-based growth
-- Reward-connected games and quizzes
-- Shop and inventory support
+💰 𝐄ᴄᴏɴᴏᴍʏ
+• Coin Wallet System
+• Daily Rewards
+• Activity Growth
+• Quiz Rewards
+• Shop & Inventory
 
-### Quiz System
+🧠 𝐐ᴜɪᴢ 𝐒ʏꜱᴛᴇᴍ
+• Anime Picture Quiz
+• GK Quiz
+• One Attempt Protection
+• Auto Quiz Mode
+• Economy Integration
 
-- Anime picture quiz with character image and four options
-- GK quiz with interactive buttons
-- One-attempt answer protection
-- Automatic quiz mode for active communities
-- Reward system connected with economy
+🎮 𝐆ᴀᴍᴇꜱ
+• Dice
+• Dart
+• Basketball
+• Football
+• Bowling
+• Slot Fun Mode
 
-### Games
+🛒 𝐒ʜᴏᴘ
+• Premium Items
+• Buy Flow System
+• Inventory Support
+• Photo & GIF Items
+• Premium Purchase Experience
 
-- Dice
-- Dart
-- Basketball
-- Football
-- Bowling
-- Slot animation in fun-only mode
+🖼 𝐌ᴇᴅɪᴀ 𝐒ʏꜱᴛᴇᴍ
+• Saved Pictures
+• Start Media
+• Welcome Media
+• Caption + Media Support
 
-### Shop
+📊 𝐃ᴀꜱʜʙᴏᴀʀᴅ
+• Mini App Foundation
+• Future Web Dashboard
+• Community Statistics
+• Control Panel Ready
 
-- Premium shop items
-- Buy button flow
-- Inventory system
-- Item media support with photos and GIFs
-- Attractive purchase response experience
+━━━━━━━━━━━━━━━━━━
 
-### Media System
+𝐃𝐄𝐒𝐈𝐆𝐍 𝐈𝐃𝐄𝐍𝐓𝐈𝐓𝐘
 
-- Custom saved pictures
-- Start media support
-- Welcome media foundation
-- Start message media attaches with caption in one clean message
+• Black-Gold Aesthetic
+• Premium Appearance
+• Professional Responses
+• Minimal Clutter
+• Community First Design
 
-### Dashboard Foundation
+━━━━━━━━━━━━━━━━━━
 
-- Mini App / web dashboard starter
-- Future-ready structure for control panels and community stats
+𝐒𝐓𝐀𝐓𝐔𝐒
 
----
+𝐀𝐙𝐀𝐈 ɪꜱ ᴄᴜʀʀᴇɴᴛʟʏ
+ᴜɴᴅᴇʀ ᴀᴄᴛɪᴠᴇ ᴅᴇᴠᴇʟᴏᴘᴍᴇɴᴛ.
 
-## Design Identity
+ɪᴛ ɪꜱ ʙᴇɪɴɢ ʙᴜɪʟᴛ ᴛᴏ ʙᴇᴄᴏᴍᴇ
+ᴀ ᴄᴏᴍᴘʟᴇᴛᴇ ᴛᴇʟᴇɢʀᴀᴍ
+ᴄᴏᴍᴍᴜɴɪᴛʏ ᴘʟᴀᴛꜰᴏʀᴍ.
 
-AZAI follows a royal, clean, premium style:
+━━━━━━━━━━━━━━━━━━
 
-- Black-gold aesthetic
-- Stylish text presentation
-- Professional responses
-- Minimal clutter
-- Community-first experience
-
----
-
-## Status
-
-AZAI is under active development for EGO NETWORK.
-
-The system is being built to become a complete Telegram community platform with economy, games, quizzes, moderation, shop, media, and dashboard controls.
-
----
-
-## AZAI by MR EGO
-
-EGO NETWORK · EST. 2026
+𝐀𝐙𝐀𝐈 • 𝐁ʏ 𝐌ʀ 𝐄ɢᴏ
+𓆩⚚ 𝐄ɢᴏ 𝐍ᴇᴛᴡᴏʀᴋ ⚚𓆪 •
