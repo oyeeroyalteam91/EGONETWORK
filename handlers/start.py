@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, WebAppInfo
 from telegram.ext import ContextTypes
 
 from config import settings
@@ -20,136 +20,246 @@ from handlers.games import dice, dart, basketball, football, bowling, slot
 bot_assets = db["bot_assets"]
 
 
-def user_info_text(update: Update) -> str:
-    user = update.effective_user
-    if not user:
-        return s("Name: Unknown\nUser ID: Unknown\nUsername: Not set")
-    username = f"@{user.username}" if user.username else "Not set"
-    return s(f"Name: {user.full_name}\nUser ID: {user.id}\nUsername: {username}")
-
-
 def bot_link(username: str | None) -> str:
-    name = username or settings.bot_name
+    name = username or getattr(settings, "bot_username", "") or settings.bot_name
+    name = str(name).replace("@", "").strip()
+
+    if not name:
+        name = settings.bot_name
+
     return f"https://t.me/{name}?startgroup=true"
 
 
-def panel_keyboard(page: int = 1, bot_username: str | None = None) -> InlineKeyboardMarkup:
-    if page == 1:
-        rows = [
-            [InlineKeyboardButton(s("Integrate In Your Chat"), url=bot_link(bot_username))],
-            [InlineKeyboardButton(s("Access Setup"), callback_data="azai_run_setup"), InlineKeyboardButton(s("Command Hall"), callback_data="azai_run_help")],
-            [InlineKeyboardButton(s("Royal Shop"), callback_data="azai_run_shop"), InlineKeyboardButton(s("Quiz Arena"), callback_data="azai_page_quiz")],
-            [InlineKeyboardButton(s("Event Core"), callback_data="azai_run_events"), InlineKeyboardButton(s("User Vault"), callback_data="azai_run_vault")],
-            [InlineKeyboardButton(s("Donate"), callback_data="azai_donate"), InlineKeyboardButton(s("Next"), callback_data="azai_page_2")],
-            [InlineKeyboardButton(s("Updates"), url=settings.updates_channel), InlineKeyboardButton(s("Support"), url=settings.support_link)],
-        ]
-    elif page == 2:
-        rows = [
-            [InlineKeyboardButton(s("Owner Panel"), callback_data="azai_run_owner"), InlineKeyboardButton(s("Group Panel"), callback_data="azai_run_group")],
-            [InlineKeyboardButton(s("Verify Core"), callback_data="azai_run_verify"), InlineKeyboardButton(s("Economy Core"), callback_data="azai_page_economy")],
-            [InlineKeyboardButton(s("Game Zone"), callback_data="azai_page_games"), InlineKeyboardButton(s("AI Chat"), callback_data="azai_ai")],
-            [InlineKeyboardButton(s("Back"), callback_data="azai_page_1"), InlineKeyboardButton(s("Home"), callback_data="azai_page_1")],
-            [InlineKeyboardButton(s("Owner Link"), url=settings.my_master)],
-        ]
-    elif page == 3:
-        rows = [
-            [InlineKeyboardButton(s("Anime Quiz"), callback_data="azai_run_anime"), InlineKeyboardButton(s("GK Quiz"), callback_data="azai_run_gk")],
-            [InlineKeyboardButton(s("Anime Keys"), callback_data="azai_run_animekeys"), InlineKeyboardButton(s("Auto Quiz"), callback_data="azai_autoquiz_info")],
-            [InlineKeyboardButton(s("Back"), callback_data="azai_page_1"), InlineKeyboardButton(s("Home"), callback_data="azai_page_1")],
-        ]
-    elif page == 4:
-        rows = [
-            [InlineKeyboardButton(s("Balance"), callback_data="azai_run_balance"), InlineKeyboardButton(s("Daily Reward"), callback_data="azai_run_daily")],
-            [InlineKeyboardButton(s("Leaderboard"), callback_data="azai_leader_info"), InlineKeyboardButton(s("Vault"), callback_data="azai_run_vault")],
-            [InlineKeyboardButton(s("Back"), callback_data="azai_page_2"), InlineKeyboardButton(s("Home"), callback_data="azai_page_1")],
-        ]
-    else:
-        rows = [
-            [InlineKeyboardButton(s("Dice"), callback_data="azai_run_dice"), InlineKeyboardButton(s("Dart"), callback_data="azai_run_dart")],
-            [InlineKeyboardButton(s("Basketball"), callback_data="azai_run_basketball"), InlineKeyboardButton(s("Football"), callback_data="azai_run_football")],
-            [InlineKeyboardButton(s("Bowling"), callback_data="azai_run_bowling"), InlineKeyboardButton(s("Slot"), callback_data="azai_run_slot")],
-            [InlineKeyboardButton(s("Back"), callback_data="azai_page_2"), InlineKeyboardButton(s("Home"), callback_data="azai_page_1")],
-        ]
+def get_user_line(update: Update) -> str:
+    user = update.effective_user
+
+    if not user:
+        return (
+            f"{s('Name')}: {s('Unknown')}\n"
+            f"{s('User ID')}: {s('Unknown')}\n"
+            f"{s('Username')}: {s('Not Set')}"
+        )
+
+    username = f"@{user.username}" if user.username else "Not set"
+
+    return (
+        f"{s('Name')}: {s(user.full_name)}\n"
+        f"{s('User ID')}: {user.id}\n"
+        f"{s('Username')}: {username}"
+    )
+
+
+def get_start_quote() -> str:
+    row = bot_assets.find_one({"key": "start_quote"}) or {}
+    quote = str(row.get("text", "")).strip()
+
+    if quote:
+        return quote
+
+    return (
+        "Power moves quietly.\n"
+        "Built for control, community, rewards, and clean automation."
+    )
+
+
+def start_panel_text(update: Update) -> str:
+    quote = get_start_quote()
+
+    return (
+        f"{s('Welcome To AZAI')}\n"
+        f"{s('EGO Network')} • {s('EST.')} {settings.est_year}\n\n"
+        f"{get_user_line(update)}\n\n"
+        f"{s(quote)}\n\n"
+        f"{s('AZAI is an advanced EGO Network community system.')}\n"
+        f"{s('Built for verification, protection, AI chat, rewards, quizzes, shop, vault, events, and clean group control.')}\n\n"
+        f"{s('Select an option below.')}"
+    )
+
+
+def mini_app_button() -> InlineKeyboardButton:
+    if getattr(settings, "webapp_url", ""):
+        return InlineKeyboardButton(
+            s("Open Mini App"),
+            web_app=WebAppInfo(settings.webapp_url),
+        )
+
+    return InlineKeyboardButton(
+        s("Open Mini App"),
+        callback_data="azai_miniapp_pending",
+    )
+
+
+def start_keyboard(bot_username: str | None = None) -> InlineKeyboardMarkup:
+    rows = [
+        [InlineKeyboardButton(s("Add To Group"), url=bot_link(bot_username))],
+        [
+            InlineKeyboardButton(s("Commands"), callback_data="azai_run_commands"),
+            InlineKeyboardButton(s("Profile"), callback_data="azai_run_profile"),
+        ],
+        [
+            InlineKeyboardButton(s("Royal Shop"), callback_data="azai_run_shop"),
+            InlineKeyboardButton(s("Vault"), callback_data="azai_run_vault"),
+        ],
+        [
+            InlineKeyboardButton(s("Anime Quiz"), callback_data="azai_run_anime"),
+            InlineKeyboardButton(s("GK Quiz"), callback_data="azai_run_gk"),
+        ],
+        [
+            InlineKeyboardButton(s("Owner Panel"), callback_data="azai_run_owner"),
+            InlineKeyboardButton(s("Group Panel"), callback_data="azai_run_group"),
+        ],
+        [
+            InlineKeyboardButton(s("Donate"), callback_data="azai_donate"),
+            InlineKeyboardButton(s("Privacy Policy"), callback_data="privacy_policy"),
+        ],
+        [
+            mini_app_button(),
+            InlineKeyboardButton(s("Anime Keys"), callback_data="azai_run_animekeys"),
+        ],
+        [
+            InlineKeyboardButton(s("Updates"), url=settings.updates_channel),
+            InlineKeyboardButton(s("Support"), url=settings.support_link),
+        ],
+        [InlineKeyboardButton(s("My Master"), url=settings.my_master)],
+    ]
+
     return InlineKeyboardMarkup(rows)
 
 
-def start_text(update: Update, page: int = 1) -> str:
-    head = f"{s('AZAI')} | {s(settings.network_name)}\n{s('EST.')} {settings.est_year}"
-    base = f"{head}\n\n{s('Power moves quietly.')}\n\n{user_info_text(update)}\n\n"
-    if page == 1:
-        return base + s("Advanced group system with verification, AI chat, rewards, leaderboard, anime quiz, games, shop, vault, events, and clean automation. Choose a panel below.")
-    if page == 2:
-        return base + s("Control panels for owner tools, group settings, verification, economy, games, and AI chat.")
-    if page == 3:
-        return base + s("Quiz arena. Anime quiz uses saved pics first. If missing, AZAI tries auto image access before sending.")
-    if page == 4:
-        return base + s("Economy core. Check balance, daily rewards, leaderboard, and vault items.")
-    return base + s("Game zone. Telegram games can be launched directly from buttons.")
-
-
-async def send_panel(update: Update, context: ContextTypes.DEFAULT_TYPE, page: int = 1) -> None:
-    query = update.callback_query
-    text = start_text(update, page)
-    markup = panel_keyboard(page, context.bot.username)
-    if query and query.message:
-        await query.answer("Updating...")
-        try:
-            await query.message.edit_caption(caption=text, reply_markup=markup)
-            return
-        except Exception:
-            try:
-                await query.message.edit_text(text=text, reply_markup=markup)
-                return
-            except Exception:
-                await query.message.reply_text(text, reply_markup=markup)
-                return
+async def send_start_media(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     message = update.effective_message
+
     if not message:
         return
+
     asset = bot_assets.find_one({"key": "start_media"}) or {}
     file_id = asset.get("file_id")
     media_type = asset.get("media_type")
-    if file_id and media_type == "video":
-        await message.reply_video(video=file_id, caption=text, reply_markup=markup)
-    elif file_id and media_type == "animation":
-        await message.reply_animation(animation=file_id, caption=text, reply_markup=markup)
-    elif file_id and media_type == "photo":
-        await message.reply_photo(photo=file_id, caption=text, reply_markup=markup)
-    else:
-        await message.reply_text(text, reply_markup=markup)
+
+    if not file_id:
+        return
+
+    try:
+        if media_type == "video":
+            await message.reply_video(video=file_id)
+        elif media_type == "animation":
+            await message.reply_animation(animation=file_id)
+        elif media_type == "photo":
+            await message.reply_photo(photo=file_id)
+    except Exception:
+        return
+
+
+async def send_start_panel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    message = update.effective_message
+
+    if not message:
+        return
+
+    await message.reply_text(
+        start_panel_text(update),
+        reply_markup=start_keyboard(context.bot.username),
+    )
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await send_panel(update, context, 1)
+    await send_start_media(update, context)
+    await send_start_panel(update, context)
+
+
+async def refresh_home_panel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+
+    if not query or not query.message:
+        return
+
+    await query.answer("Updating...")
+
+    text = start_panel_text(update)
+    markup = start_keyboard(context.bot.username)
+
+    try:
+        await query.message.edit_text(text=text, reply_markup=markup)
+    except Exception:
+        try:
+            await query.message.edit_caption(caption=text, reply_markup=markup)
+        except Exception:
+            await query.message.reply_text(text, reply_markup=markup)
+
+
+async def donate_panel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    message = update.effective_message
+
+    text = (
+        f"{s('Donate Panel')}\n"
+        f"{s('AZAI')} × {s('EGO Network')} • {s('EST.')} {settings.est_year}\n\n"
+        f"{s('Telegram Stars donation is being prepared.')}\n"
+        f"{s('No EC or XP is given for donations.')}\n"
+        f"{s('Donations are support-only, not pay-to-win.')}"
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton(s("Support Channel"), url=settings.support_link)],
+            [InlineKeyboardButton(s("Back"), callback_data="azai_home")],
+        ]
+    )
+
+    if query and query.message:
+        await query.answer("Opening...")
+        try:
+            await query.message.edit_text(text=text, reply_markup=keyboard)
+        except Exception:
+            await query.message.reply_text(text, reply_markup=keyboard)
+        return
+
+    if message:
+        await message.reply_text(text, reply_markup=keyboard)
+
+
+async def miniapp_pending(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+
+    if not query or not query.message:
+        return
+
+    await query.answer("Mini App is being prepared.")
+    await query.message.reply_text(s("Mini App is being prepared."))
 
 
 async def azai_panel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    if not query or not query.data or not query.message:
-        return
-    data = query.data
-    if data == "azai_page_1":
-        await send_panel(update, context, 1); return
-    if data == "azai_page_2":
-        await send_panel(update, context, 2); return
-    if data == "azai_page_quiz":
-        await send_panel(update, context, 3); return
-    if data == "azai_page_economy":
-        await send_panel(update, context, 4); return
-    if data == "azai_page_games":
-        await send_panel(update, context, 5); return
 
-    await query.answer("Running...")
+    if not query or not query.data:
+        return
+
+    data = query.data
+
+    if data == "azai_home":
+        await refresh_home_panel(update, context)
+        return
+
+    if data == "azai_miniapp_pending":
+        await miniapp_pending(update, context)
+        return
+
+    if data == "azai_donate":
+        await donate_panel(update, context)
+        return
+
+    await query.answer("Opening...")
+
     run_map = {
+        "azai_run_commands": commands,
         "azai_run_setup": setup_profile,
-        "azai_run_help": commands,
+        "azai_run_profile": my_profile,
         "azai_run_shop": shop,
         "azai_run_vault": my_items,
         "azai_run_anime": anime_quiz,
         "azai_run_gk": gk_quiz,
         "azai_run_animekeys": anime_pic_keys,
         "azai_run_events": events_panel,
-        "azai_run_profile": my_profile,
         "azai_run_owner": owner_panel,
         "azai_run_group": group_panel,
         "azai_run_verify": verify_command,
@@ -162,21 +272,49 @@ async def azai_panel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         "azai_run_bowling": bowling,
         "azai_run_slot": slot,
     }
-    if data in run_map:
-        await run_map[data](update, context)
+
+    handler = run_map.get(data)
+
+    if handler:
+        await handler(update, context)
         return
-    replies = {
-        "azai_donate": s("Donate panel is not connected yet. Owner can add donation link later."),
-        "azai_ai": s("AI Chat is active. Say AZAI, hello, help, shop, quiz, or problem."),
-        "azai_autoquiz_info": f"{s('Auto Quiz')}\n/autoquiz\n/autoquizon\n/autoquizoff",
-        "azai_leader_info": f"{s('Leaderboard')}\n/leaderboard\n/top",
-    }
-    await query.message.reply_text(replies.get(data, s("Panel not found.")))
+
+    if query.message:
+        await query.message.reply_text(s("Panel action not found."))
 
 
 async def privacy_policy(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    if not query or not query.message:
+    message = update.effective_message
+
+    text = (
+        f"{s('Privacy Policy')}\n"
+        f"{s('AZAI')} × {s('EGO Network')} • {s('EST.')} {settings.est_year}\n\n"
+        f"{s('AZAI stores limited user data required for verification, personalization, rewards, moderation, and community features.')}\n\n"
+        f"{s('Data we may store:')}\n"
+        f"{s('Telegram User ID')}\n"
+        f"{s('Name, Gender, Birthday, Religion Preference')}\n"
+        f"{s('Balance, XP, REP, Vault Items')}\n"
+        f"{s('Quiz Stats, Warnings, Group Activity')}\n"
+        f"{s('Settings and limited memory for better replies')}\n\n"
+        f"{s('We do not sell user data.')}\n"
+        f"{s('We do not share user data with third parties.')}\n"
+        f"{s('We do not reveal source code, bot tokens, API keys, database credentials, security logic, or private owner tools.')}\n\n"
+        f"{s('Owner Contact')}: @EGOISTICxPRIME\n\n"
+        f"{s('Powered By EGO Network')} • {s('EST.')} {settings.est_year}"
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        [[InlineKeyboardButton(s("Back"), callback_data="azai_home")]]
+    )
+
+    if query and query.message:
+        await query.answer("Opening privacy...")
+        try:
+            await query.message.edit_text(text=text, reply_markup=keyboard)
+        except Exception:
+            await query.message.reply_text(text, reply_markup=keyboard)
         return
-    await query.answer("Opening privacy...")
-    await query.message.reply_text(s("Privacy Policy") + "\n\n" + s("AZAI stores basic data for verification, safety, economy, games, quizzes, profile setup, birthday rewards, festival rewards, and community management. Never share passwords, OTPs, payment details, bot tokens, or database links."))
+
+    if message:
+        await message.reply_text(text, reply_markup=keyboard)
